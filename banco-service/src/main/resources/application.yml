@@ -1,0 +1,17 @@
+# Configuración común a las 3 instancias (Banco A, B y C).
+# Cada banco se diferencia activando su perfil: bancoA, bancoB o bancoC.
+# Ejemplo: ./mvnw spring-boot:run -Dspring-boot.run.profiles=bancoA
+spring:
+  application:
+    name: banco-service
+
+# Endpoint de salud (usado por Docker para el healthcheck).
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+logging:
+  level:
+    com.banco: INFO

@@ -1,5 +1,8 @@
 HELP.md
 target/
+
+### Datos generados en tiempo de ejecución (cada banco crea su copia local) ###
+data/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

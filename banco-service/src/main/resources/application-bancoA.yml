@@ -1,0 +1,12 @@
+# Perfil del Banco A.
+server:
+  port: 8081
+
+banco:
+  id: BANCO_A
+  nombre: Banco A
+  # Archivo externo (fuera del jar) donde este banco persiste sus cuentas.
+  # Se puede sobreescribir con la variable de entorno BANCO_DATA_DIR (Docker).
+  data-file: ${BANCO_DATA_DIR:./data}/cuentas-bancoA.json
+  # Datos semilla del classpath, copiados a data-file la primera vez.
+  seed-resource: data/cuentas-bancoA.json

@@ -1,0 +1,46 @@
+# Levanta las 3 instancias del mismo banco-service, una por perfil de Spring.
+# Uso:  docker-compose up --build
+#
+# Banco A -> http://localhost:8081
+# Banco B -> http://localhost:8082
+# Banco C -> http://localhost:8083
+#
+# (El API Gateway y el frontend se añaden en el Hito 2.)
+
+services:
+  banco-a:
+    build: ./banco-service
+    container_name: banco-a
+    environment:
+      SPRING_PROFILES_ACTIVE: bancoA
+    ports:
+      - "8081:8081"
+    volumes:
+      - banco-a-data:/app/data
+
+  banco-b:
+    build: ./banco-service
+    container_name: banco-b
+    environment:
+      SPRING_PROFILES_ACTIVE: bancoB
+      SERVER_PORT: 8082
+    ports:
+      - "8082:8082"
+    volumes:
+      - banco-b-data:/app/data
+
+  banco-c:
+    build: ./banco-service
+    container_name: banco-c
+    environment:
+      SPRING_PROFILES_ACTIVE: bancoC
+      SERVER_PORT: 8083
+    ports:
+      - "8083:8083"
+    volumes:
+      - banco-c-data:/app/data
+
+volumes:
+  banco-a-data:
+  banco-b-data:
+  banco-c-data:

@@ -1,0 +1,9 @@
+# Perfil del Banco C.
+server:
+  port: 8083
+
+banco:
+  id: BANCO_C
+  nombre: Banco C
+  data-file: ${BANCO_DATA_DIR:./data}/cuentas-bancoC.json
+  seed-resource: data/cuentas-bancoC.json
