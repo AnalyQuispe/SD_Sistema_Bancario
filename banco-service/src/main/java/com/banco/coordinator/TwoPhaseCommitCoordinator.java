@@ -13,7 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 /**
  * Lado COORDINADOR del Two-Phase Commit (Hito 2 · Integrante 2).
@@ -34,6 +36,7 @@ public class TwoPhaseCommitCoordinator {
     private final BancoProperties properties;
     private final BancoRemotoClient remoto;
     private final TwoPhaseCommitParticipant participanteLocal;
+    private final ExclusionMutua exclusionMutua;
 
     /** Ejecuta el protocolo completo y devuelve el estado final (COMMITTED o ABORTED). */
     public EstadoTransaccion ejecutar(String origen, String destino, BigDecimal monto) {
@@ -43,26 +46,41 @@ public class TwoPhaseCommitCoordinator {
         log.info("2PC COORDINADOR tx={} inicia | {} ({}) --{}--> {} ({})",
                 txId, origen, bancoOrigen, monto, destino, bancoDestino);
 
-        // -------- Fase 1: PREPARE (voto de cada participante) --------
-        Voto votoOrigen = solicitarPrepare(bancoOrigen,
-                new PrepareRequest(txId, origen, RolParticipante.DEBITO, monto));
-        Voto votoDestino = solicitarPrepare(bancoDestino,
-                new PrepareRequest(txId, destino, RolParticipante.CREDITO, monto));
-
-        // -------- Fase 2: decisión y propagación --------
-        if (votoOrigen == Voto.YES && votoDestino == Voto.YES) {
-            enviarDecision(bancoOrigen, txId, true);
-            enviarDecision(bancoDestino, txId, true);
-            log.info("2PC COORDINADOR tx={} DECISION=COMMIT", txId);
-            return EstadoTransaccion.COMMITTED;
+        // -------- Exclusión mutua distribuida (Integrante 3 · Ricart-Agrawala) --------
+        // Adquirir locks en orden alfabético del número de cuenta para evitar deadlock
+        // distribuido (mismo patrón que LockManager.conLocks del Hito 1).
+        List<String> cuentasOrdenadas = Stream.of(origen, destino).sorted().toList();
+        for (String cuenta : cuentasOrdenadas) {
+            exclusionMutua.adquirir(cuenta);
         }
 
-        // Se aborta a ambos: el que votó NO no preparó nada -> su abort es no-op idempotente.
-        enviarDecision(bancoOrigen, txId, false);
-        enviarDecision(bancoDestino, txId, false);
-        log.info("2PC COORDINADOR tx={} DECISION=ABORT (voto origen={}, voto destino={})",
-                txId, votoOrigen, votoDestino);
-        return EstadoTransaccion.ABORTED;
+        try {
+            // -------- Fase 1: PREPARE (voto de cada participante) --------
+            Voto votoOrigen = solicitarPrepare(bancoOrigen,
+                    new PrepareRequest(txId, origen, RolParticipante.DEBITO, monto));
+            Voto votoDestino = solicitarPrepare(bancoDestino,
+                    new PrepareRequest(txId, destino, RolParticipante.CREDITO, monto));
+
+            // -------- Fase 2: decisión y propagación --------
+            if (votoOrigen == Voto.YES && votoDestino == Voto.YES) {
+                enviarDecision(bancoOrigen, txId, true);
+                enviarDecision(bancoDestino, txId, true);
+                log.info("2PC COORDINADOR tx={} DECISION=COMMIT", txId);
+                return EstadoTransaccion.COMMITTED;
+            }
+
+            // Se aborta a ambos: el que votó NO no preparó nada -> su abort es no-op idempotente.
+            enviarDecision(bancoOrigen, txId, false);
+            enviarDecision(bancoDestino, txId, false);
+            log.info("2PC COORDINADOR tx={} DECISION=ABORT (voto origen={}, voto destino={})",
+                    txId, votoOrigen, votoDestino);
+            return EstadoTransaccion.ABORTED;
+        } finally {
+            // Liberar locks distribuidos SIEMPRE (commit o abort), en orden inverso.
+            for (int i = cuentasOrdenadas.size() - 1; i >= 0; i--) {
+                exclusionMutua.liberar(cuentasOrdenadas.get(i));
+            }
+        }
     }
 
     private Voto solicitarPrepare(String bancoId, PrepareRequest req) {

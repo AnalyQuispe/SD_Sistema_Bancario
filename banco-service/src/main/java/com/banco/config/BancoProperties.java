@@ -23,6 +23,9 @@ public class BancoProperties {
     /** Nombre legible para la UI, p. ej. {@code Banco A}. */
     private String nombre;
 
+    /** Prioridad numérica para el algoritmo Bully (Integrante 3): gana el mayor vivo. */
+    private int prioridad;
+
     /** Ruta (externa al jar) del archivo JSON donde este banco persiste sus cuentas. */
     private String dataFile;
 

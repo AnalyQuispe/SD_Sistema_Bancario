@@ -5,6 +5,7 @@ server:
 banco:
   id: BANCO_B
   nombre: Banco B
+  prioridad: 2
   data-file: ${BANCO_DATA_DIR:./data}/cuentas-bancoB.json
   seed-resource: data/cuentas-bancoB.json
   # Los otros dos bancos (peers): A y C.

@@ -5,6 +5,7 @@ server:
 banco:
   id: BANCO_A
   nombre: Banco A
+  prioridad: 1
   # Archivo externo (fuera del jar) donde este banco persiste sus cuentas.
   # Se puede sobreescribir con la variable de entorno BANCO_DATA_DIR (Docker).
   data-file: ${BANCO_DATA_DIR:./data}/cuentas-bancoA.json
