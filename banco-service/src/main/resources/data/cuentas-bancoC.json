@@ -1,0 +1,33 @@
+{
+  "bancoId": "BANCO_C",
+  "clientes": [
+    {
+      "id": "C003",
+      "nombre": "Elena Vega",
+      "cuentas": [
+        { "numero": "C-3001", "saldo": 1750.00, "moneda": "USD", "bancoId": "BANCO_C" },
+        { "numero": "C-3002", "saldo": 920.00, "moneda": "USD", "bancoId": "BANCO_C" },
+        { "numero": "C-3003", "saldo": 410.00, "moneda": "USD", "bancoId": "BANCO_C" }
+      ]
+    },
+    {
+      "id": "C004",
+      "nombre": "Felipe Rojas",
+      "cuentas": [
+        { "numero": "C-3004", "saldo": 2600.00, "moneda": "USD", "bancoId": "BANCO_C" },
+        { "numero": "C-3005", "saldo": 300.00, "moneda": "USD", "bancoId": "BANCO_C" },
+        { "numero": "C-3006", "saldo": 90.00, "moneda": "USD", "bancoId": "BANCO_C" }
+      ]
+    },
+    {
+      "id": "C200",
+      "nombre": "Carla Nunez",
+      "cuentas": [
+        { "numero": "C-3200", "saldo": 4800.00, "moneda": "USD", "bancoId": "BANCO_C" },
+        { "numero": "C-3201", "saldo": 700.00, "moneda": "USD", "bancoId": "BANCO_C" },
+        { "numero": "C-3202", "saldo": 150.00, "moneda": "USD", "bancoId": "BANCO_C" }
+      ]
+    }
+  ],
+  "transacciones": []
+}
