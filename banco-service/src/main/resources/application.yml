@@ -5,6 +5,12 @@ spring:
   application:
     name: banco-service
 
+# Secreto compartido entre los 3 bancos para las llamadas peer-a-peer (/internal/**).
+# Aporte A (seguridad): sin esta cabecera un tercero recibe 403. En Docker se
+# inyecta con la variable INTERNAL_TOKEN (misma para los 3 nodos).
+banco:
+  internal-token: ${INTERNAL_TOKEN:sd-bancos-2026-secreto-interno}
+
 # Endpoint de salud (usado por Docker para el healthcheck).
 management:
   endpoints:

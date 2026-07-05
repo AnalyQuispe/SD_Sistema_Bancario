@@ -1,17 +1,25 @@
-# Levanta las 3 instancias del mismo banco-service, una por perfil de Spring.
-# Uso:  docker-compose up --build
+# Sistema completo del Hito 2:  docker-compose up --build
 #
-# Banco A -> http://localhost:8081
-# Banco B -> http://localhost:8082
-# Banco C -> http://localhost:8083
+#   Frontend (React+nginx)  -> http://localhost:5173
+#   API Gateway             -> http://localhost:8080   (único punto de entrada del frontend)
+#   Banco A                 -> http://localhost:8081   (expuesto solo para demos/curl)
+#   Banco B                 -> http://localhost:8082
+#   Banco C                 -> http://localhost:8083
 #
-# (El API Gateway y el frontend se añaden en el Hito 2.)
+# El navegador habla SOLO con el gateway; los /internal/** de los bancos exigen
+# el secreto compartido INTERNAL_TOKEN (Aporte A · seguridad).
+
+x-secretos: &secretos
+  # Mismos secretos en todos los nodos; cámbialos si se despliega fuera de la demo.
+  INTERNAL_TOKEN: sd-bancos-2026-secreto-interno
+  JWT_SECRET: sd-bancos-2026-clave-jwt-hs256-solo-para-demo
 
 services:
   banco-a:
     build: ./banco-service
     container_name: banco-a
     environment:
+      <<: *secretos
       SPRING_PROFILES_ACTIVE: bancoA
       # Peers por nombre de contenedor (red interna de Docker).
       PEER_B_URL: http://banco-b:8082
@@ -20,11 +28,18 @@ services:
       - "8081:8081"
     volumes:
       - banco-a-data:/app/data
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/8081 && printf 'GET /actuator/health HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   banco-b:
     build: ./banco-service
     container_name: banco-b
     environment:
+      <<: *secretos
       SPRING_PROFILES_ACTIVE: bancoB
       SERVER_PORT: 8082
       PEER_A_URL: http://banco-a:8081
@@ -33,11 +48,18 @@ services:
       - "8082:8082"
     volumes:
       - banco-b-data:/app/data
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/8082 && printf 'GET /actuator/health HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   banco-c:
     build: ./banco-service
     container_name: banco-c
     environment:
+      <<: *secretos
       SPRING_PROFILES_ACTIVE: bancoC
       SERVER_PORT: 8083
       PEER_A_URL: http://banco-a:8081
@@ -46,6 +68,49 @@ services:
       - "8083:8083"
     volumes:
       - banco-c-data:/app/data
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/8083 && printf 'GET /actuator/health HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    environment:
+      <<: *secretos
+      BANCO_A_URL: http://banco-a:8081
+      BANCO_B_URL: http://banco-b:8082
+      BANCO_C_URL: http://banco-c:8083
+    ports:
+      - "8080:8080"
+    depends_on:
+      banco-a:
+        condition: service_healthy
+      banco-b:
+        condition: service_healthy
+      banco-c:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/8080 && printf 'GET /actuator/health HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # URL del gateway VISTA DESDE EL NAVEGADOR del usuario (no desde el contenedor).
+        VITE_GATEWAY_URL: http://localhost:8080
+    container_name: frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      gateway:
+        condition: service_healthy
 
 volumes:
   banco-a-data:

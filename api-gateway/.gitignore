@@ -1,0 +1,42 @@
+HELP.md
+target/
+
+### Datos generados en tiempo de ejecución (cada banco crea su copia local) ###
+# Anclado con "/" para ignorar SOLO banco-service/data (runtime),
+# NO los datos semilla de src/main/resources/data (que sí van al repo).
+/data/
+
+### Archivos temporales de arranque manual con `java` (classpath / argfiles) ###
+cp*.txt
+args-*.txt
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/

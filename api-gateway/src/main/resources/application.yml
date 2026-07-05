@@ -1,0 +1,71 @@
+# API Gateway (Hito 2 · Integrante 5) — punto único de entrada del sistema.
+#
+# El frontend SOLO habla con este servicio (puerto 8080). Cada banco queda
+# detrás de un prefijo de ruta:
+#     /a/api/**  →  Banco A        /a/actuator/health  →  salud del Banco A
+#     /b/api/**  →  Banco B        /b/actuator/health  →  salud del Banco B
+#     /c/api/**  →  Banco C        /c/actuator/health  →  salud del Banco C
+#
+# Los endpoints internos banco-a-banco (/internal/**) NUNCA se enrutan: no hay
+# ruta que los alcance y además el JwtAuthGlobalFilter los bloquea de forma
+# explícita (defensa en profundidad).
+
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      default-filters:
+        # Los bancos también emiten cabeceras CORS; nos quedamos con una sola copia.
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
+      routes:
+        - id: banco-a
+          uri: ${BANCO_A_URL:http://localhost:8081}
+          predicates:
+            - Path=/a/api/**,/a/actuator/health
+          filters:
+            - StripPrefix=1
+        - id: banco-b
+          uri: ${BANCO_B_URL:http://localhost:8082}
+          predicates:
+            - Path=/b/api/**,/b/actuator/health
+          filters:
+            - StripPrefix=1
+        - id: banco-c
+          uri: ${BANCO_C_URL:http://localhost:8083}
+          predicates:
+            - Path=/c/api/**,/c/actuator/health
+          filters:
+            - StripPrefix=1
+
+# Bancos que el gateway usa para validar el login (mismas URLs que las rutas).
+gateway:
+  bancos:
+    - id: BANCO_A
+      prefijo: a
+      url: ${BANCO_A_URL:http://localhost:8081}
+    - id: BANCO_B
+      prefijo: b
+      url: ${BANCO_B_URL:http://localhost:8082}
+    - id: BANCO_C
+      prefijo: c
+      url: ${BANCO_C_URL:http://localhost:8083}
+
+# Aporte A · Seguridad: secreto de firma de los JWT (HS256, mínimo 32 bytes).
+# En Docker se inyecta con JWT_SECRET; el valor por defecto es solo para la demo.
+seguridad:
+  jwt-secret: ${JWT_SECRET:sd-bancos-2026-clave-jwt-hs256-solo-para-demo}
+  expiracion-minutos: 480
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+logging:
+  level:
+    com.banco.gateway: INFO
