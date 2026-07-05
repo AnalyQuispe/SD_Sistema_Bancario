@@ -1,0 +1,33 @@
+{
+  "bancoId": "BANCO_B",
+  "clientes": [
+    {
+      "id": "C002",
+      "nombre": "David Soto",
+      "cuentas": [
+        { "numero": "B-2001", "saldo": 2100.00, "moneda": "USD", "bancoId": "BANCO_B" },
+        { "numero": "B-2002", "saldo": 640.00, "moneda": "USD", "bancoId": "BANCO_B" },
+        { "numero": "B-2003", "saldo": 180.00, "moneda": "USD", "bancoId": "BANCO_B" }
+      ]
+    },
+    {
+      "id": "C100",
+      "nombre": "Bruno Diaz",
+      "cuentas": [
+        { "numero": "B-2100", "saldo": 900.00, "moneda": "USD", "bancoId": "BANCO_B" },
+        { "numero": "B-2101", "saldo": 1500.00, "moneda": "USD", "bancoId": "BANCO_B" },
+        { "numero": "B-2102", "saldo": 75.00, "moneda": "USD", "bancoId": "BANCO_B" }
+      ]
+    },
+    {
+      "id": "C200",
+      "nombre": "Carla Nunez",
+      "cuentas": [
+        { "numero": "B-2200", "saldo": 4200.00, "moneda": "USD", "bancoId": "BANCO_B" },
+        { "numero": "B-2201", "saldo": 350.00, "moneda": "USD", "bancoId": "BANCO_B" },
+        { "numero": "B-2202", "saldo": 60.00, "moneda": "USD", "bancoId": "BANCO_B" }
+      ]
+    }
+  ],
+  "transacciones": []
+}

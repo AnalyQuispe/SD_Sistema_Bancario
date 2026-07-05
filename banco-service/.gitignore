@@ -2,7 +2,13 @@ HELP.md
 target/
 
 ### Datos generados en tiempo de ejecución (cada banco crea su copia local) ###
-data/
+# Anclado con "/" para ignorar SOLO banco-service/data (runtime),
+# NO los datos semilla de src/main/resources/data (que sí van al repo).
+/data/
+
+### Archivos temporales de arranque manual con `java` (classpath / argfiles) ###
+cp*.txt
+args-*.txt
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
