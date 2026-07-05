@@ -63,23 +63,26 @@ public class AuthController {
             return Mono.just(respuestaOk("ADMIN", "ADMIN"));
         }
 
+        // Se pregunta a los 3 bancos EN PARALELO (flatMap): la vista de clientes de
+        // cualquier banco es global, así que basta con que UN banco vivo confirme.
+        // Consultarlos en serie multiplicaría por 3 la espera cuando un banco está caído.
         return Flux.fromIterable(propiedades.getBancos())
-                .concatMap(banco -> existeCliente(banco, clienteId))
-                .filter(resultado -> resultado != Resultado.BANCO_CAIDO)
-                .next() // el primer banco vivo decide (su vista de clientes es global)
-                .map(resultado -> switch (resultado) {
-                    case EXISTE -> {
+                .flatMap(banco -> existeCliente(banco, clienteId))
+                .collectList()
+                .map(resultados -> {
+                    if (resultados.contains(Resultado.EXISTE)) {
                         log.info("Login correcto del cliente {}", clienteId);
-                        yield respuestaOk(clienteId, "CLIENTE");
+                        return respuestaOk(clienteId, "CLIENTE");
                     }
-                    default -> {
+                    if (resultados.contains(Resultado.NO_EXISTE)) {
                         log.warn("Login rechazado: el cliente {} no existe en ningún banco", clienteId);
-                        yield ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                                 .body(Map.of("message", "Cliente no registrado en ningún banco"));
                     }
-                })
-                .defaultIfEmpty(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                        .body(Map.of("message", "Ningún banco disponible para validar el login")));
+                    log.warn("Login imposible para {}: ningún banco respondió", clienteId);
+                    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                            .body(Map.of("message", "Ningún banco disponible para validar el login"));
+                });
     }
 
     private ResponseEntity<Map<String, String>> respuestaOk(String clienteId, String rol) {
@@ -89,13 +92,21 @@ public class AuthController {
                 "rol", rol));
     }
 
-    /** Pregunta a UN banco si el cliente tiene cuentas (en toda la red). */
+    /**
+     * Pregunta a UN banco si el cliente tiene cuentas (en toda la red).
+     *
+     * <p>El endpoint consultado es la vista global del banco, que a su vez consulta a sus
+     * peers; si uno está caído, el banco espera su propio timeout (~2 s) antes de responder
+     * con los bancos vivos. Por eso el timeout de aquí es holgado (6 s): debe superar la
+     * espera interna del banco para no marcar como "caído" a un banco que en realidad
+     * responde, solo que un poco más lento por el peer caído.
+     */
     private Mono<Resultado> existeCliente(GatewayBancosProperties.Banco banco, String clienteId) {
         return webClient.get()
                 .uri(banco.getUrl() + "/api/clientes/{id}/cuentas", clienteId)
                 .retrieve()
                 .toBodilessEntity()
-                .timeout(Duration.ofSeconds(3))
+                .timeout(Duration.ofSeconds(6))
                 .map(respuesta -> Resultado.EXISTE)
                 .onErrorResume(WebClientResponseException.NotFound.class,
                         e -> Mono.just(Resultado.NO_EXISTE))
