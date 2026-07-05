@@ -127,6 +127,15 @@ public class BancoRemotoClient {
         return restClient.get().uri(peerUrl + path).retrieve().body(tipoRespuesta);
     }
 
+    /**
+     * URL base del peer con ese id de banco, si está configurado. La usan el coordinador 2PC
+     * (Integrante 2), la coordinación (Integrante 3) y la replicación (Integrante 4) para
+     * dirigir un mensaje a un banco concreto por su id lógico ({@code BANCO_A/B/C}).
+     */
+    public Optional<String> urlDePeer(String bancoId) {
+        return peerPorId(bancoId).map(Peer::getUrl);
+    }
+
     // ----------------------------------------------------------------- helpers
 
     private Optional<Peer> peerPorId(String bancoId) {

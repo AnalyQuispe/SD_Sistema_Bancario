@@ -97,7 +97,7 @@ public class CuentaService {
                 .orElseThrow(() -> new CuentaNoEncontradaException("cliente " + clienteId));
     }
 
-    Cuenta buscarCuenta(BancoData data, String numero) {
+    public Cuenta buscarCuenta(BancoData data, String numero) {
         return data.getClientes().stream()
                 .flatMap(c -> c.getCuentas().stream())
                 .filter(cu -> cu.getNumero().equals(numero))

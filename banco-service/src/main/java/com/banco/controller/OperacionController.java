@@ -1,6 +1,7 @@
 package com.banco.controller;
 
 import com.banco.model.Cuenta;
+import com.banco.model.EstadoTransaccion;
 import com.banco.model.dto.OperacionRequest;
 import com.banco.model.dto.TransferenciaRequest;
 import com.banco.service.CuentaService;
@@ -34,12 +35,17 @@ public class OperacionController {
         return cuentaService.retirar(req.getCuenta(), req.getMonto());
     }
 
+    /**
+     * Transferencia local o distribuida (2PC). El servicio decide la ruta según los bancos
+     * dueños de origen y destino; aquí solo se traduce el estado final a la respuesta HTTP.
+     */
     @PostMapping("/transferencia")
     public ResponseEntity<Map<String, String>> transferencia(@Valid @RequestBody TransferenciaRequest req) {
-        transferenciaService.transferenciaLocal(
+        EstadoTransaccion estado = transferenciaService.transferencia(
                 req.getCuentaOrigen(), req.getCuentaDestino(), req.getMonto());
-        return ResponseEntity.ok(Map.of(
-                "estado", "COMMITTED",
-                "mensaje", "Transferencia local realizada"));
+        String mensaje = estado == EstadoTransaccion.COMMITTED
+                ? "Transferencia realizada"
+                : "Transferencia abortada (algún participante no pudo confirmar)";
+        return ResponseEntity.ok(Map.of("estado", estado.name(), "mensaje", mensaje));
     }
 }
