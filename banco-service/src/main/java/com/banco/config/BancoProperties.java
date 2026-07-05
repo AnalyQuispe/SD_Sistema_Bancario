@@ -3,14 +3,15 @@ package com.banco.config;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Configuración propia de cada instancia de banco.
  *
  * <p>Se enlaza con el prefijo {@code banco.*} de los archivos
  * {@code application-bancoX.yml}. Permite que el mismo código se comporte como
  * Banco A, B o C según el perfil activo.
- *
- * <p>En el Hito 2 se añadirán aquí la lista de <em>peers</em> y la carpeta de réplicas.
  */
 @Data
 @ConfigurationProperties(prefix = "banco")
@@ -27,4 +28,21 @@ public class BancoProperties {
 
     /** Recurso del classpath con los datos semilla, usado si {@code dataFile} no existe aún. */
     private String seedResource;
+
+    /**
+     * Los otros dos bancos con los que este nodo se comunica (Hito 2, Integrante 1).
+     * En el perfil de Banco A serán B y C; en B serán A y C; etc.
+     */
+    private List<Peer> peers = new ArrayList<>();
+
+    /** Un banco remoto al que este nodo puede llamar por REST. */
+    @Data
+    public static class Peer {
+
+        /** Identificador del banco remoto, p. ej. {@code BANCO_B}. */
+        private String id;
+
+        /** URL base del banco remoto, p. ej. {@code http://localhost:8082}. */
+        private String url;
+    }
 }

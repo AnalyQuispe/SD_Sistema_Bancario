@@ -39,6 +39,21 @@ public class CuentaService {
         return buscarCliente(repository.load(), clienteId).getCuentas();
     }
 
+    /**
+     * Cuentas de un cliente en ESTE banco, o lista vacía si el cliente no tiene ninguna aquí.
+     *
+     * <p>A diferencia de {@link #cuentasDeCliente(String)} no lanza excepción: es la variante
+     * pensada para la vista global (Hito 2), donde un cliente puede tener cuentas solo en
+     * algunos bancos y consultar cualquiera de ellos.
+     */
+    public List<Cuenta> cuentasLocalesDeCliente(String clienteId) {
+        return repository.load().getClientes().stream()
+                .filter(cliente -> cliente.getId().equals(clienteId))
+                .findFirst()
+                .map(Cliente::getCuentas)
+                .orElseGet(List::of);
+    }
+
     /** Datos y saldo de una cuenta concreta de este banco. */
     public Cuenta consultarCuenta(String numero) {
         return buscarCuenta(repository.load(), numero);
