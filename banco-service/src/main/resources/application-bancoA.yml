@@ -10,3 +10,10 @@ banco:
   data-file: ${BANCO_DATA_DIR:./data}/cuentas-bancoA.json
   # Datos semilla del classpath, copiados a data-file la primera vez.
   seed-resource: data/cuentas-bancoA.json
+  # Los otros dos bancos (peers). En local se usa localhost; en Docker, el nombre
+  # del contenedor vía PEER_*_URL (ver docker-compose.yml).
+  peers:
+    - id: BANCO_B
+      url: ${PEER_B_URL:http://localhost:8082}
+    - id: BANCO_C
+      url: ${PEER_C_URL:http://localhost:8083}

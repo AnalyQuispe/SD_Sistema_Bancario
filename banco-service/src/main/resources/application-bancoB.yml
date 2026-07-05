@@ -7,3 +7,9 @@ banco:
   nombre: Banco B
   data-file: ${BANCO_DATA_DIR:./data}/cuentas-bancoB.json
   seed-resource: data/cuentas-bancoB.json
+  # Los otros dos bancos (peers): A y C.
+  peers:
+    - id: BANCO_A
+      url: ${PEER_A_URL:http://localhost:8081}
+    - id: BANCO_C
+      url: ${PEER_C_URL:http://localhost:8083}

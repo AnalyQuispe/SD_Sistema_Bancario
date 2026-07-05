@@ -13,6 +13,9 @@ services:
     container_name: banco-a
     environment:
       SPRING_PROFILES_ACTIVE: bancoA
+      # Peers por nombre de contenedor (red interna de Docker).
+      PEER_B_URL: http://banco-b:8082
+      PEER_C_URL: http://banco-c:8083
     ports:
       - "8081:8081"
     volumes:
@@ -24,6 +27,8 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: bancoB
       SERVER_PORT: 8082
+      PEER_A_URL: http://banco-a:8081
+      PEER_C_URL: http://banco-c:8083
     ports:
       - "8082:8082"
     volumes:
@@ -35,6 +40,8 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: bancoC
       SERVER_PORT: 8083
+      PEER_A_URL: http://banco-a:8081
+      PEER_B_URL: http://banco-b:8082
     ports:
       - "8083:8083"
     volumes:
