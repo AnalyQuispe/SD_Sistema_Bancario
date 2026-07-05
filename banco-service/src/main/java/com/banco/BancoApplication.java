@@ -4,6 +4,7 @@ import com.banco.config.BancoProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Punto de entrada del servicio de banco.
@@ -14,6 +15,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
  * {@code application-bancoX.yml}.
  */
 @SpringBootApplication
+@EnableScheduling
 @EnableConfigurationProperties(BancoProperties.class)
 public class BancoApplication {
 

@@ -1,11 +1,13 @@
 package com.banco.repository;
 
 import com.banco.config.BancoProperties;
+import com.banco.event.BancoDataChangedEvent;
 import com.banco.model.BancoData;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Repository;
 
@@ -43,6 +45,7 @@ public class CuentaRepository {
 
     private final BancoProperties properties;
     private final ObjectMapper objectMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     /** Serializa todo acceso a disco dentro de este proceso (evita locks solapados). */
     private final Object fileMutex = new Object();
@@ -96,6 +99,7 @@ public class CuentaRepository {
     public void save(BancoData data) {
         synchronized (fileMutex) {
             try {
+                data.setVersion(data.getVersion() + 1);
                 byte[] bytes = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(data);
                 Path tmp = dataPath.resolveSibling(dataPath.getFileName() + ".tmp");
                 try (RandomAccessFile raf = new RandomAccessFile(tmp.toFile(), "rw");
@@ -109,6 +113,7 @@ public class CuentaRepository {
                         StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
                 cache = data;
                 log.debug("Estado del banco {} persistido en {}", properties.getId(), dataPath);
+                eventPublisher.publishEvent(new BancoDataChangedEvent(this, data));
             } catch (IOException e) {
                 throw new IllegalStateException("Error al persistir el archivo del banco", e);
             }

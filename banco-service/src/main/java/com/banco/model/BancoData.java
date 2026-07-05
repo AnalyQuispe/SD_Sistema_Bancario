@@ -21,6 +21,9 @@ public class BancoData {
     private String bancoId;
 
     @Builder.Default
+    private long version = 0;
+
+    @Builder.Default
     private List<Cliente> clientes = new ArrayList<>();
 
     @Builder.Default

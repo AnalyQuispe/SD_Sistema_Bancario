@@ -35,6 +35,8 @@ public class BancoProperties {
      */
     private List<Peer> peers = new ArrayList<>();
 
+    private ReplicacionProperties replicacion = new ReplicacionProperties();
+
     /** Un banco remoto al que este nodo puede llamar por REST. */
     @Data
     public static class Peer {
@@ -44,5 +46,11 @@ public class BancoProperties {
 
         /** URL base del banco remoto, p. ej. {@code http://localhost:8082}. */
         private String url;
+    }
+
+    @Data
+    public static class ReplicacionProperties {
+        private String destinoPeerId;
+        private String replicasDir = "./data/replicas";
     }
 }

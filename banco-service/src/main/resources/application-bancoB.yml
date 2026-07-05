@@ -13,3 +13,6 @@ banco:
       url: ${PEER_A_URL:http://localhost:8081}
     - id: BANCO_C
       url: ${PEER_C_URL:http://localhost:8083}
+  replicacion:
+    destino-peer-id: BANCO_C
+    replicas-dir: ${BANCO_REPLICAS_DIR:./data/replicas}

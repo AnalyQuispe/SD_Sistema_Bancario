@@ -102,7 +102,7 @@ public class TwoPhaseCommitParticipant {
             repository.save(data);
             registro.eliminar(txId);
             log.info("2PC COMMIT tx={} rol={} cuenta={} -> COMMITTED", txId, reserva.rol(), reserva.cuenta());
-            // TODO (Integrante 4): disparar ReplicacionService.replicar(data) tras el commit.
+            // Nota (Integrante 4): La replicación se dispara automáticamente al guardar vía BancoDataChangedEvent.
             return null;
         });
     }
