@@ -1,0 +1,64 @@
+@startuml diagrama_bully
+title Eleccion de Coordinador - Algoritmo Bully (Integrante 3)\nEl Banco C (mayor prioridad) cae y se elige uno nuevo
+
+skinparam backgroundColor White
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 25
+skinparam sequence {
+    ArrowColor #34495E
+    LifeLineBorderColor #7F8C8D
+    ParticipantBorderColor #2C3E50
+    ParticipantBackgroundColor #EAF2F8
+    ParticipantFontColor #1B2631
+}
+
+participant "Banco A\n(prioridad 1)" as A #EBF5FB
+participant "Banco B\n(prioridad 2)" as B #FDEBD0
+participant "Banco C\n(prioridad 3)" as C #E8F8F5
+
+note over A, C
+  Regla del Bully: gana el nodo VIVO de MAYOR prioridad (A=1 < B=2 < C=3).
+  Se envia ELECCION solo a los de prioridad mayor.
+end note
+
+C -> C : <font color=red>CAE (docker stop)
+destroy C
+
+== A detecta el problema e inicia la eleccion ==
+
+A -> A : iniciarEleccion()
+
+A -->x C : ELECCION  (prioridad mayor)
+note right of A #FADBD8
+  C no responde (esta caido)
+end note
+
+A -> B : ELECCION  (prioridad mayor)
+activate B
+B --> A : OK (estoy vivo y soy mayor)
+note left of B #D5F5E3
+  B responde OK y lanza
+  SU PROPIA eleccion
+end note
+
+== B verifica si hay alguien mayor que el ==
+
+B -->x C : ELECCION  (unico mayor que B)
+note right of B #FADBD8
+  C tampoco le responde a B
+end note
+
+== Nadie mayor respondio -> B se proclama coordinador ==
+
+B -> B : proclamarCoordinador()
+deactivate B
+
+B -> A : COORDINADOR = Banco B
+A -->x C : (C sigue caido)
+
+note over A, B #D5F5E3
+  Nuevo coordinador acordado: BANCO B.
+  Cuando C vuelva, su eleccion inicial recupera la coordinacion (C=3).
+end note
+
+@enduml

@@ -10,6 +10,10 @@ spring:
 # inyecta con la variable INTERNAL_TOKEN (misma para los 3 nodos).
 banco:
   internal-token: ${INTERNAL_TOKEN:sd-bancos-2026-secreto-interno}
+  # Motor de persistencia (configurable en aspectos de la base de datos):
+  #   archivo -> JSON local (por defecto)   |   db -> base de datos SQLite embebida
+  # Se puede sobreescribir con la variable de entorno BANCO_PERSISTENCIA (p. ej. en Docker).
+  persistencia: ${BANCO_PERSISTENCIA:archivo}
 
 # Endpoint de salud (usado por Docker para el healthcheck).
 management:

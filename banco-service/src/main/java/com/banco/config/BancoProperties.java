@@ -33,6 +33,12 @@ public class BancoProperties {
     private String seedResource;
 
     /**
+     * Motor de persistencia (configurable en aspectos de la base de datos):
+     * {@code archivo} → JSON local (por defecto); {@code db} → base de datos SQLite embebida.
+     */
+    private String persistencia = "archivo";
+
+    /**
      * Los otros dos bancos con los que este nodo se comunica (Hito 2, Integrante 1).
      * En el perfil de Banco A serán B y C; en B serán A y C; etc.
      */

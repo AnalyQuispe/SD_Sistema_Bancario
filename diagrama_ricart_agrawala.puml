@@ -1,0 +1,78 @@
+@startuml diagrama_ricart_agrawala
+title Exclusion Mutua Distribuida - Ricart-Agrawala (Integrante 3)\nDos bancos compiten por la MISMA cuenta (C-3200)
+
+skinparam backgroundColor White
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 25
+skinparam sequence {
+    ArrowColor #34495E
+    LifeLineBorderColor #7F8C8D
+    ParticipantBorderColor #2C3E50
+    ParticipantBackgroundColor #EAF2F8
+    ParticipantFontColor #1B2631
+}
+
+participant "Banco A\n(prioridad de reloj)" as A #EBF5FB
+participant "Banco B" as B #FDEBD0
+participant "Banco C" as C #E8F8F5
+
+note over A, C
+  Cada nodo lleva un RELOJ LOGICO DE LAMPORT.
+  Regla: entra a la seccion critica quien tiene el
+  timestamp MENOR (empate se rompe por id de banco).
+end note
+
+== Ambos piden la cuenta C-3200 casi a la vez ==
+
+A -> A : tick reloj -> ts = 5\nestado = SOLICITANDO
+B -> B : tick reloj -> ts = 7\nestado = SOLICITANDO
+
+A -->> B : REQUEST(A, C-3200, ts=5)
+A -->> C : REQUEST(A, C-3200, ts=5)
+B -->> A : REQUEST(B, C-3200, ts=7)
+B -->> C : REQUEST(B, C-3200, ts=7)
+
+== Decision de cada receptor ==
+
+note left of A #FADBD8
+  A recibe REQUEST(B, ts=7):
+  A tambien pide y su ts (5) < 7
+  => A tiene prioridad -> ENCOLA a B
+  responde ok = false (diferido)
+end note
+
+note right of B #D5F5E3
+  B recibe REQUEST(A, ts=5):
+  el ts de A (5) < el mio (7)
+  => A gana -> respondo OK ya
+end note
+
+B --> A : OK (inmediato)
+C --> A : OK (no le interesa la cuenta)
+C --> B : OK (no le interesa la cuenta)
+
+== A recibio OK de TODOS -> entra a la seccion critica ==
+
+hnote over A #D5F5E3 : SECCION CRITICA\nopera C-3200 (2PC)
+
+... B queda ENCOLADO esperando el OK de A ...
+
+== A termina y LIBERA ==
+
+A -> A : estado = LIBRE
+A -->> B : OK diferido (release)
+
+note right of B #D5F5E3
+  B ya tiene OK de A y de C
+  => ahora entra a la seccion critica
+end note
+
+hnote over B #FDEBD0 : SECCION CRITICA\nopera C-3200 (2PC)
+
+note over A, C
+  Resultado: las dos operaciones sobre C-3200 se SERIALIZAN.
+  Ninguna se pierde; el saldo final es exacto.
+  Tolerancia a fallos: un peer caido se cuenta como OK (timeout 10 s).
+end note
+
+@enduml
