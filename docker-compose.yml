@@ -21,6 +21,10 @@ services:
     environment:
       <<: *secretos
       SPRING_PROFILES_ACTIVE: bancoA
+      # Persistencia configurable: banco-a usa base de datos SQLite; B y C usan archivo JSON.
+      # Demuestra que el sistema es configurable en aspectos de la base de datos y que el 2PC
+      # funciona entre bancos con motores de almacenamiento distintos.
+      BANCO_PERSISTENCIA: db
       # Peers por nombre de contenedor (red interna de Docker).
       PEER_B_URL: http://banco-b:8082
       PEER_C_URL: http://banco-c:8083

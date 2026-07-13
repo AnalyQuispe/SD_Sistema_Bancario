@@ -1,0 +1,78 @@
+@startuml diagrama_2pc
+title Two-Phase Commit: transferencia interbancaria A-1200 -> C-3200 (monto 300)
+
+skinparam backgroundColor White
+skinparam sequenceMessageAlign center
+skinparam ParticipantPadding 20
+skinparam BoxPadding 10
+skinparam sequence {
+    ArrowColor #34495E
+    LifeLineBorderColor #7F8C8D
+    ParticipantBorderColor #2C3E50
+    ParticipantBackgroundColor #EAF2F8
+    ParticipantFontColor #1B2631
+}
+
+participant "Coordinador\n(Banco A)" as Coord #D5F5E3
+participant "Participante ORIGEN\n(Banco A · DEBITO)" as Origen #EBF5FB
+participant "Participante DESTINO\n(Banco C · CREDITO)" as Dest #FDEBD0
+
+autonumber "<b>[0]"
+
+Coord -> Coord : genera txId (TX-xxxx)\nadquiere locks distribuidos
+
+== Fase 1: PREPARE ==
+
+Coord -> Origen : PREPARE(txId, A-1200, DEBITO, 300)
+activate Origen
+Origen -> Origen : valida saldo (5000 >= 300)\nRESERVA: saldo 5000 -> 4700\nestado = PREPARED
+Origen --> Coord : VOTO = YES
+deactivate Origen
+
+Coord -> Dest : PREPARE(txId, C-3200, CREDITO, 300)
+activate Dest
+Dest -> Dest : la cuenta existe\nestado = PREPARED
+Dest --> Coord : VOTO = YES
+deactivate Dest
+
+== Fase 2: DECISION ==
+
+alt ambos votaron YES  ->  COMMIT
+    Coord -> Origen : COMMIT(txId)
+    activate Origen
+    Origen -> Origen : (ya resto en PREPARE)\nestado = COMMITTED
+    Origen --> Coord : OK
+    deactivate Origen
+
+    Coord -> Dest : COMMIT(txId)
+    activate Dest
+    Dest -> Dest : SUMA: saldo 4800 -> 5100\nestado = COMMITTED
+    Dest --> Coord : OK
+    deactivate Dest
+
+    note over Coord, Dest #D5F5E3
+        Resultado: A-1200 = 4700 · C-3200 = 5100
+        El MISMO txId queda COMMITTED en ambos archivos JSON
+    end note
+
+else algun voto NO o timeout  ->  ABORT
+    Coord -> Origen : ABORT(txId)
+    activate Origen
+    Origen -> Origen : DEVUELVE la reserva\nsaldo 4700 -> 5000\nestado = ABORTED
+    Origen --> Coord : OK
+    deactivate Origen
+
+    Coord -> Dest : ABORT(txId)
+    activate Dest
+    Dest -> Dest : no habia sumado\nestado = ABORTED
+    Dest --> Coord : OK
+    deactivate Dest
+
+    note over Coord, Dest #FADBD8
+        Ningun saldo cambia. Atomicidad garantizada.
+    end note
+end
+
+Coord -> Coord : libera locks distribuidos
+
+@enduml
