@@ -1,28 +1,12 @@
-# Artículo IEEE — LaTeX corregido
-
-Código LaTeX del artículo con las correcciones de la revisión aplicadas. Compilar con **pdflatex** (recomendado: Overleaf, plantilla vacía + pegar este código).
-
-**Correcciones aplicadas respecto a la versión anterior:**
-
-1. **§ Two-Phase Commit:** la descripción de la fase PREPARE ahora refleja la implementación real (**débito tentativo**: el origen resta el importe ya en PREPARE y lo devuelve en ABORT), en lugar de la fórmula «saldo disponible = saldo − reservado» que no corresponde al código y contradecía al informe.
-2. **«versión 13» → «versión N»** en la figura de replicación y en la Tabla I, con comentario `%` recordando reemplazar N por el valor real observado en la captura.
-3. Comentario en la Tabla I: si desborda la columna, reducir `p{5.2cm}` a `p{4.9cm}`.
-
----
-
-```latex
 % =========================================================================
 % Artículo — Síntesis del desarrollo del proyecto
 % Sistema Bancario Distribuido · Curso: Sistemas Distribuidos · 2026-B
 % Formato: IEEE conference, dos columnas. Compilar con pdflatex (u Overleaf).
 %
-% Convención de figuras pendientes:
-%   [captura de ...]  -> reemplazar por una captura de pantalla real del sistema
-%   [imagen de ...]   -> prompt para generar la figura con IA y luego insertarla
+% Las figuras usan las imágenes de la carpeta imagenes-latex/.
 %
 % CORREGIDO: fase PREPARE descrita como débito tentativo (coincide con la
-% implementación y con el informe); "versión 13" -> "versión N" (reemplazar
-% por el valor real tras la captura).
+% implementación y con el informe).
 % =========================================================================
 \documentclass[conference]{IEEEtran}
 
@@ -32,34 +16,45 @@ Código LaTeX del artículo con las correcciones de la revisión aplicadas. Comp
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{url}
-\usepackage{xcolor}
 
-% ---- Placeholders de figuras ----
-\newcommand{\phcaptura}[1]{%
-  \fbox{\parbox[c][3.2cm][c]{0.93\linewidth}{\centering\color{red!70!black}\bfseries [captura de #1]}}}
-\newcommand{\phimagen}[1]{%
-  \fbox{\parbox[c][3.2cm][c]{0.93\linewidth}{\centering\color{blue!70!black}\bfseries [imagen de #1]}}}
+\graphicspath{{imagenes-latex/}}
+
+% IEEEtran rotula las palabras clave como "Index Terms"; en un artículo en
+% español debe leerse "Palabras clave" (el "Resumen" ya lo localiza babel).
+\renewcommand{\IEEEkeywordsname}{Palabras clave}
 
 \begin{document}
+
+% babel-spanish renumera las subsecciones al estilo español ("V-A"), pisando la
+% numeración de IEEE. Se restaura la de IEEEtran: A., B., C., ...
+\renewcommand{\thesubsection}{\Alph{subsection}}
 
 \title{Sistema Bancario Distribuido: transacciones interbancarias con
 Two-Phase Commit, coordinación descentralizada y replicación de archivos}
 
 \author{
-\IEEEauthorblockN{Integrante 1 [Nombre y Apellidos]}
-\IEEEauthorblockA{[Universidad]\\ {[correo]}}
-\and
-\IEEEauthorblockN{Integrante 2 [Nombre y Apellidos]}
-\IEEEauthorblockA{[Universidad]\\ {[correo]}}
-\and
-\IEEEauthorblockN{Integrante 3 [Nombre y Apellidos]}
-\IEEEauthorblockA{[Universidad]\\ {[correo]}}
-\and
-\IEEEauthorblockN{Integrante 4 [Nombre y Apellidos]}
-\IEEEauthorblockA{[Universidad]\\ {[correo]}}
-\and
-\IEEEauthorblockN{Integrante 5 [Nombre y Apellidos]}
-\IEEEauthorblockA{[Universidad]\\ {[correo]}}
+\begin{tabular}{ccc}
+Turpo Huanca Wilson Josue &
+Zeballos Perez Juan Sergio &
+Quispe Bejar Garlet Analy \\
+
+\small Universidad Nacional de San Agustín &
+\small Universidad Nacional de San Agustín &
+\small Universidad Nacional de San Agustín \\
+
+\small wturpoh@unsa.edu.pe &
+\small jzeballosp@unsa.edu.pe &
+\small gquispeb@unsa.edu.pe \\[1em]
+
+Huamani Condori Jeanpiero Sixto &
+Payehuanca Riquelme Jhastyn Jefferson & \\
+
+\small Universidad Nacional de San Agustín &
+\small Universidad Nacional de San Agustín & \\
+
+\small jhuamanicond@unsa.edu.pe &
+\small jpayehuancar@unsa.edu.pe &
+\end{tabular}
 }
 
 \maketitle
@@ -85,8 +80,8 @@ supervivencia del sistema ante la caída y recuperación de un nodo.
 \end{abstract}
 
 \begin{IEEEkeywords}
-sistemas distribuidos, two-phase commit, algoritmo bully, ricart--agrawala,
-relojes de Lamport, replicación, tolerancia a fallos, microservicios
+Sistemas distribuidos, Two-Phase Commit, algoritmo Bully, Ricart--Agrawala,
+replicación, tolerancia a fallos
 \end{IEEEkeywords}
 
 % =========================================================================
@@ -129,14 +124,7 @@ el único punto de entrada del frontend (React~18 + Vite, servido con nginx).
 
 \begin{figure}[t]
 \centering
-\phimagen{diagrama de arquitectura del sistema con el navegador del usuario
-arriba conectado a un frontend React, este a un API Gateway central, y el
-gateway conectado a tres nodos Banco A, Banco B y Banco C dibujados como
-cajas; entre los tres bancos flechas bidireccionales etiquetadas
-``/internal/**'' formando un triángulo, y debajo de cada banco un ícono de
-archivo JSON y una carpeta de réplicas; estilo diagrama técnico plano con
-fondo blanco, bancos en color azul, gateway en color verde, frontend en color
-gris y flechas internas en color naranja, con leyenda}
+\includegraphics[width=0.93\linewidth]{arquitectura.png}
 \caption{Arquitectura general: el frontend habla solo con el gateway; los
 bancos se comunican entre sí por la red interna \texttt{/internal/**}.}
 \label{fig:arquitectura}
@@ -179,16 +167,6 @@ modo que la caída de un nodo degrada la respuesta pero nunca la convierte en
 error. Así, el cliente \texttt{C200} obtiene sus 9 cuentas (3 por banco)
 preguntando a cualquiera de los tres nodos, y 6 cuentas si uno está caído.
 
-\begin{figure}[t]
-\centering
-\phcaptura{la respuesta JSON de GET /a/api/clientes/C200/cuentas mostrando
-las 9 cuentas del cliente con sus campos bancoId BANCO\_A, BANCO\_B y
-BANCO\_C}
-\caption{Vista global: las 9 cuentas de \texttt{C200} en los tres bancos,
-obtenidas consultando a un solo nodo.}
-\label{fig:vistaglobal}
-\end{figure}
-
 % =========================================================================
 \section{Transacciones distribuidas: Two-Phase Commit}
 
@@ -219,19 +197,13 @@ cuentas: misma instancia (transferencia local atómica del Hito~1), ambas en
 otro mismo banco (reenvío al dueño, evitando un 2PC innecesario) o bancos
 distintos (2PC).
 
-\begin{figure}[t]
-\centering
-\phcaptura{los logs del banco coordinador durante una transferencia
-interbancaria mostrando la secuencia 2PC COORDINADOR tx=TX-... inicia,
-PREPARE con voto YES de BANCO\_A y BANCO\_C, y DECISION=COMMIT; junto a los
-dos archivos JSON antes y después con la resta y la suma de 100}
-\caption{Traza de un 2PC exitoso: \texttt{A-1200} $\rightarrow$
-\texttt{C-3200} por 100, con ambos archivos consistentes.}
-\label{fig:2pc}
-\end{figure}
-
 % =========================================================================
 \section{Coordinación y acuerdo}
+
+Al no existir un nodo central que arbitre, los tres bancos deben ponerse de
+acuerdo entre iguales. Esta sección describe los dos mecanismos de coordinación
+implementados: la elección del nodo que asume el rol de coordinador y la
+exclusión mutua para el acceso concurrente a una misma cuenta.
 
 \subsection{Elección de coordinador: algoritmo Bully}
 
@@ -250,7 +222,7 @@ recupera la coordinación automáticamente.
 
 El acceso concurrente a una misma cuenta desde varios bancos se serializa con
 el algoritmo de Ricart--Agrawala~\cite{ricart1981} sobre relojes lógicos de
-Lamport~\cite{lamport1978}. El lock es \emph{por cuenta}: para entrar a la
+Lamport~\cite{lamport1978} (Fig.~\ref{fig:ricart}). El lock es \emph{por cuenta}: para entrar a la
 sección crítica un nodo envía \textsc{request}(cuenta, \emph{timestamp}) a
 todos los peers y espera el \textsc{ok} de todos; un receptor difiere su
 respuesta solo si está en sección crítica de esa cuenta o la solicita con
@@ -265,14 +237,7 @@ de la fase \textsc{prepare}, y lo libera siempre tras \textsc{commit} o
 
 \begin{figure}[t]
 \centering
-\phimagen{diagrama de secuencia UML del algoritmo Ricart-Agrawala con tres
-líneas de vida Banco A, Banco B y Banco C, donde Banco A y Banco B envían
-REQUEST simultáneos por la misma cuenta con timestamps 5 y 7, Banco A entra
-a la sección crítica por tener timestamp menor mientras la petición de
-Banco B queda encolada, y al liberar Banco A envía el OK diferido que
-permite entrar a Banco B; fondo blanco, mensajes REQUEST en color naranja,
-mensajes OK en color verde, sección crítica sombreada en color celeste,
-etiquetas de timestamp visibles}
+\includegraphics[width=0.93\linewidth]{algoritmo-ricart-agrawala.png}
 \caption{Serialización de dos peticiones concurrentes por la misma cuenta:
 el \emph{timestamp} de Lamport menor gana; el resto espera el OK diferido.}
 \label{fig:ricart}
@@ -300,18 +265,6 @@ y adoptando la de versión más alta. En el plano transaccional, la caída de
 un participante durante \textsc{prepare} se traduce en voto \textsc{no} y
 abort limpio.
 
-% NOTA: reemplazar "versión N" por el número real observado en la captura.
-\begin{figure}[t]
-\centering
-\phcaptura{los logs del Banco B durante el experimento de caída: tres
-intentos fallidos de replicación hacia BANCO\_C con Connection refused, el
-mensaje Encolando, y tras reencender C el mensaje Replicación de pendiente
-exitosa. Versión N enviada a BANCO\_C}
-\caption{Tolerancia a fallos en la replicación: la operación principal se
-completa, la réplica se encola y se entrega al volver el nodo.}
-\label{fig:replica}
-\end{figure}
-
 % =========================================================================
 \section{Seguridad y punto único de entrada}
 
@@ -338,14 +291,6 @@ indicador de salud por banco. Todo el sistema se levanta con
 \texttt{docker-compose up --build}: cinco contenedores con
 \emph{healthchecks} y dependencias ordenadas.
 
-\begin{figure}[t]
-\centering
-\phcaptura{el dashboard del frontend con la sesión de C200 iniciada,
-mostrando sus 9 cuentas agrupadas por banco y el indicador de bancos vivos}
-\caption{Vista unificada del cliente \texttt{C200} en el frontend.}
-\label{fig:frontend}
-\end{figure}
-
 % =========================================================================
 \section{Resultados y evaluación}
 
@@ -354,7 +299,6 @@ gateway y frontend). La Tabla~\ref{tab:resultados} resume las verificaciones
 funcionales realizadas.
 
 % NOTA: si la tabla desborda la columna, reducir p{5.2cm} a p{4.9cm}.
-% NOTA: reemplazar "versión N" por el número real observado en la captura.
 \begin{table}[t]
 \caption{Verificaciones funcionales del sistema}
 \label{tab:resultados}
@@ -397,22 +341,13 @@ replicación pendiente se entregó automáticamente al reincorporarse el nodo,
 y la elección de coordinador convergió en ambas direcciones (caída y
 recuperación).
 
-\begin{figure}[t]
-\centering
-\phcaptura{la terminal con las 6 transferencias concurrentes lanzadas en
-paralelo y sus 6 respuestas COMMITTED, seguida de la consulta de saldos
-finales B-2200=3900, A-1200=5050 y C-3200=5050}
-\caption{Prueba de concurrencia: seis 2PC simultáneos sobre la misma cuenta
-compartida, serializados con saldos exactos.}
-\label{fig:concurrencia}
-\end{figure}
-
 % =========================================================================
 \section{Conclusiones y trabajo futuro}
 
 El proyecto demuestra que, sobre nodos autónomos con persistencia en archivos
 locales y sin ninguna base de datos central, es posible construir un servicio
-bancario coherente aplicando los algoritmos clásicos de la literatura: 2PC
+bancario coherente aplicando los algoritmos clásicos de la
+literatura~\cite{coulouris2012,tanenbaum2017}: 2PC
 para la atomicidad interbancaria, Bully para el acuerdo de coordinador,
 Ricart--Agrawala con relojes de Lamport para la exclusión mutua, y
 replicación versionada con reintentos para la disponibilidad de los datos.
@@ -423,7 +358,7 @@ garantías de una dependen de las otras.
 
 Como trabajo futuro se identifican: la recuperación del coordinador 2PC
 tras una caída en plena fase de decisión (registro persistente de
-transacciones dudosas y protocolo de terminación); heartbeats periódicos
+transacciones dudosas y protocolo de terminación); \emph{heartbeats} periódicos
 para disparar elecciones sin intervención manual; una suite de pruebas de
 integración automatizadas con métricas de latencia y \emph{throughput} bajo
 carga; y el cifrado TLS de la comunicación entre nodos.
@@ -466,4 +401,3 @@ A.~S. Tanenbaum y M.~van Steen, \emph{Distributed Systems},
 \end{thebibliography}
 
 \end{document}
-```
